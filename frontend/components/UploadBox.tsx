@@ -38,7 +38,7 @@ export default function UploadBox() {
       formData.append("fileName", file.name);
 
       const res = await axios.post(
-        "http://localhost:5000/upload/chunk",
+        "https://shelby-storage-dashboard-1.onrender.com/upload/chunk",
         formData
       );
 
