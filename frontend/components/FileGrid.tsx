@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import SearchBar from "./SearchBar";
 
 interface FileItem {
   _id?: string;
@@ -17,6 +18,7 @@ export default function FileGrid() {
 
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     const fetchFiles = async () => {
@@ -25,11 +27,18 @@ export default function FileGrid() {
       try {
         setLoading(true);
 
-        const res = await axios.get(
-          `https://shelby-storage-dashboard-1.onrender.com/files/${account.address}`
-        );
+        const baseURL =
+          "https://shelby-storage-dashboard-1.onrender.com/files";
 
-        // ✅ FIXED
+        const url = query
+          ? `${baseURL}/search/${account.address}?q=${query}`
+          : `${baseURL}/${account.address}`;
+
+        const res = await axios.get(url);
+
+        // backend returns:
+        // - /:wallet -> { success, files }
+        // - /search -> { success, files }
         setFiles(res.data.files || []);
       } catch (err) {
         console.error("Error fetching files:", err);
@@ -40,7 +49,7 @@ export default function FileGrid() {
     };
 
     fetchFiles();
-  }, [account]);
+  }, [account, query]);
 
   if (!account) {
     return (
@@ -50,34 +59,34 @@ export default function FileGrid() {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="text-center text-slate-400 mt-10">
-        Loading files...
-      </div>
-    );
-  }
-
   return (
-    <div className="grid md:grid-cols-3 gap-6">
-      {files.length === 0 ? (
-        <div className="text-slate-400">
+    <div className="space-y-6">
+      {/* Search Bar */}
+      <SearchBar value={query} onChange={setQuery} />
+
+      {/* Loading */}
+      {loading && (
+        <div className="text-center text-slate-400">
+          Loading files...
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && files.length === 0 && (
+        <div className="text-center text-slate-400">
           No files found
         </div>
-      ) : (
-        files.map((file, index) => (
+      )}
+
+      {/* Grid */}
+      <div className="grid md:grid-cols-3 gap-6">
+        {files.map((file, index) => (
           <div
             key={file._id || index}
             className="bg-slate-900 p-4 rounded-2xl border border-slate-800"
           >
-            <video
-              controls
-              className="rounded-xl w-full"
-            >
-              <source
-                src={file.url}
-                type="video/mp4"
-              />
+            <video controls className="rounded-xl w-full">
+              <source src={file.url} type="video/mp4" />
             </video>
 
             <div className="mt-3 space-y-1">
@@ -92,9 +101,7 @@ export default function FileGrid() {
               {file.uploadedAt && (
                 <div className="text-xs text-slate-500">
                   Uploaded:{" "}
-                  {new Date(
-                    file.uploadedAt
-                  ).toLocaleString()}
+                  {new Date(file.uploadedAt).toLocaleString()}
                 </div>
               )}
 
@@ -108,8 +115,8 @@ export default function FileGrid() {
               </a>
             </div>
           </div>
-        ))
-      )}
+        ))}
+      </div>
     </div>
   );
 }

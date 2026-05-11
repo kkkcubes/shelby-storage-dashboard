@@ -4,17 +4,13 @@ import UploadBox from "../../components/UploadBox";
 import UploadProgress from "../../components/UploadProgress";
 import StorageStats from "../../components/StorageStats";
 import AuthButtons from "../../components/AuthButtons";
-
-// ✅ ADDED IMPORT
 import FileGrid from "../../components/FileGrid";
 
-import {
-  WalletSelector,
-} from "@aptos-labs/wallet-adapter-ant-design";
+// ✅ ADDED IMPORT
+import AnalyticsChart from "../../components/AnalyticsChart";
 
-import {
-  useSession,
-} from "next-auth/react";
+import { WalletSelector } from "@aptos-labs/wallet-adapter-ant-design";
+import { useSession } from "next-auth/react";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -25,10 +21,7 @@ export default function DashboardPage() {
       <div className="border-b border-slate-800 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-8 py-5 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">
-              Shelby Storage
-            </h1>
-
+            <h1 className="text-3xl font-bold">Shelby Storage</h1>
             <p className="text-slate-400 text-sm">
               Decentralized File Dashboard
             </p>
@@ -45,10 +38,7 @@ export default function DashboardPage() {
       {!session ? (
         <div className="flex items-center justify-center h-[80vh]">
           <div className="text-center">
-            <h2 className="text-4xl font-bold mb-4">
-              Login Required
-            </h2>
-
+            <h2 className="text-4xl font-bold mb-4">Login Required</h2>
             <p className="text-slate-400">
               Connect wallet and login to continue
             </p>
@@ -86,17 +76,18 @@ export default function DashboardPage() {
               <h3 className="text-2xl font-semibold mb-6">
                 Upload Progress
               </h3>
-
               <UploadProgress />
             </div>
           </div>
 
-          {/* ✅ NEW SECTION */}
+          {/* ANALYTICS CHART */}
           <div className="mt-10">
-            <h2 className="text-3xl font-bold mb-6">
-              My Files
-            </h2>
+            <AnalyticsChart />
+          </div>
 
+          {/* FILES SECTION */}
+          <div className="mt-10">
+            <h2 className="text-3xl font-bold mb-6">My Files</h2>
             <FileGrid />
           </div>
         </div>

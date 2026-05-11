@@ -8,35 +8,20 @@ const FormData = require("form-data");
  * @param {string} fileName
  * @returns {Promise<{cid: string, url: string}>}
  */
-const uploadToShelby = async (
-  fileBuffer,
-  fileName
-) => {
+const uploadToShelby = async (fileBuffer, fileName) => {
   try {
-    console.log(
-      `Uploading ${fileName} to Shelby RPC...`
-    );
-
-    // Create form data
     const formData = new FormData();
 
-    formData.append(
-      "file",
-      fileBuffer,
-      fileName
-    );
+    formData.append("file", fileBuffer, fileName);
 
-    // Upload request
     const response = await axios.post(
       "https://api.shelby.xyz/upload",
       formData,
       {
         headers: {
-          ...formData.getHeaders(),
-
           Authorization: `Bearer ${process.env.SHELBY_API_KEY}`,
+          ...formData.getHeaders(),
         },
-
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
       }
@@ -49,9 +34,7 @@ const uploadToShelby = async (
       error.response?.data || error.message
     );
 
-    throw new Error(
-      "Shelby upload failed"
-    );
+    throw new Error("Shelby upload failed");
   }
 };
 
@@ -60,29 +43,15 @@ const uploadToShelby = async (
  * @param {string} filePath
  * @returns {Promise<{cid: string, url: string}>}
  */
-const uploadFileToShelby = async (
-  filePath
-) => {
+const uploadFileToShelby = async (filePath) => {
   try {
-    // Read file
-    const fileBuffer =
-      fs.readFileSync(filePath);
+    const fileBuffer = fs.readFileSync(filePath);
 
-    // Extract filename
-    const fileName =
-      filePath.split("/").pop();
+    const fileName = filePath.split("/").pop();
 
-    // Upload file
-    return await uploadToShelby(
-      fileBuffer,
-      fileName
-    );
+    return await uploadToShelby(fileBuffer, fileName);
   } catch (error) {
-    console.error(
-      "File upload failed:",
-      error.message
-    );
-
+    console.error("File upload failed:", error.message);
     throw error;
   }
 };

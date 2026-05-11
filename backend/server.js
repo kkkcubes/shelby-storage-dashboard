@@ -11,11 +11,14 @@ const connectDB = require("./config/db");
 // ROUTES
 const uploadRoute = require("./routes/upload");
 const aiRoute = require("./routes/ai");
+
+// ✅ SHARE ROUTE ADDED
 const shareRoute = require("./routes/share");
 
-// ✅ FILES ROUTE ADDED
+// FILES ROUTE
 const filesRoute = require("./routes/files");
 
+// SOCKET
 const { initSocket } = require("./socket");
 
 const app = express();
@@ -36,9 +39,11 @@ app.use(
 // Routes
 app.use("/upload", uploadRoute);
 app.use("/ai", aiRoute);
+
+// ✅ SHARE ROUTE MOUNTED
 app.use("/share", shareRoute);
 
-// ✅ FILES ROUTE MOUNTED
+// FILES ROUTE
 app.use("/files", filesRoute);
 
 // Create HTTP server
