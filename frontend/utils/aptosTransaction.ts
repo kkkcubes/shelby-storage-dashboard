@@ -1,7 +1,7 @@
 import { InputTransactionData } from "@aptos-labs/wallet-adapter-react";
 
 /**
- * Build a safe Aptos transaction payload
+ * Build a safe Aptos transfer transaction
  * Wallet-compatible + TypeScript-safe
  */
 export function buildTransferTransaction(
@@ -19,3 +19,23 @@ export function buildTransferTransaction(
     },
   };
 }
+
+/**
+ * Mint Storage NFT using CID
+ */
+export const mintStorageNFT = async (
+  signAndSubmitTransaction: any,
+  cid: string
+) => {
+  const payload: InputTransactionData = {
+    data: {
+      function: "0x1::storage::mint",
+      typeArguments: [],
+      functionArguments: [cid],
+    },
+  };
+
+  return await signAndSubmitTransaction(
+    payload
+  );
+};

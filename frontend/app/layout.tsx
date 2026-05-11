@@ -1,7 +1,7 @@
 import "./globals.css";
-
 import "antd/dist/reset.css";
 
+import Providers from "./providers";
 import WalletProvider from "../components/WalletProvider";
 
 export const metadata = {
@@ -17,9 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <WalletProvider>
-          {children}
-        </WalletProvider>
+        <Providers>
+          <WalletProvider>{children}</WalletProvider>
+        </Providers>
       </body>
     </html>
   );

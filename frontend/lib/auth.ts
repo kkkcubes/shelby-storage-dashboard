@@ -1,27 +1,45 @@
-import { NextAuthOptions } from "next-auth";
+import {
+  NextAuthOptions,
+  getServerSession,
+} from "next-auth";
+
 import GitHubProvider from "next-auth/providers/github";
 
-export const authOptions: NextAuthOptions = {
-  providers: [
-    GitHubProvider({
-      clientId: process.env.GITHUB_ID!,
-      clientSecret: process.env.GITHUB_SECRET!,
-    }),
-  ],
+export const authOptions: NextAuthOptions =
+  {
+    providers: [
+      GitHubProvider({
+        clientId:
+          process.env.GITHUB_ID!,
 
-  secret: process.env.NEXTAUTH_SECRET,
+        clientSecret:
+          process.env
+            .GITHUB_SECRET!,
+      }),
+    ],
 
-  session: {
-    strategy: "jwt",
-  },
+    secret:
+      process.env.NEXTAUTH_SECRET,
+
+    session: {
+      strategy: "jwt",
+    },
 
     callbacks: {
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.sub!;
-      }
+      async session({
+        session,
+        token,
+      }) {
+        if (session.user) {
+          session.user.id =
+            token.sub!;
+        }
 
-      return session;
+        return session;
+      },
     },
-  },
-};
+  };
+
+// Helper function
+export const auth = () =>
+  getServerSession(authOptions);

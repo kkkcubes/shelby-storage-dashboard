@@ -3,9 +3,13 @@
 import { useState } from "react";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
+
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
-import { buildTransferTransaction } from "../utils/aptosTransaction";
+import {
+  buildTransferTransaction,
+  mintStorageNFT,
+} from "../utils/aptosTransaction";
 
 const CHUNK_SIZE = 1024 * 1024;
 
@@ -14,6 +18,7 @@ export default function UploadBox() {
   const [status, setStatus] = useState("");
   const [uploadedVideos, setUploadedVideos] = useState<string[]>([]);
 
+  // WALLET HOOK
   const { account, signAndSubmitTransaction } = useWallet();
 
   // =========================
@@ -24,18 +29,27 @@ export default function UploadBox() {
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
     let uploadedUrl = "";
+    let uploadedCid = "";
 
     for (let i = 0; i < totalChunks; i++) {
       const start = i * CHUNK_SIZE;
       const end = Math.min(file.size, start + CHUNK_SIZE);
+
       const chunk = file.slice(start, end);
 
       const formData = new FormData();
+
       formData.append("chunk", chunk);
       formData.append("fileId", fileId);
       formData.append("chunkIndex", i.toString());
       formData.append("totalChunks", totalChunks.toString());
       formData.append("fileName", file.name);
+
+      // ✅ FIXED WALLET CONVERSION
+      formData.append(
+        "wallet",
+        account?.address?.toString() || ""
+      );
 
       const res = await axios.post(
         "https://shelby-storage-dashboard-1.onrender.com/upload/chunk",
@@ -44,10 +58,14 @@ export default function UploadBox() {
 
       if (res.data.url) {
         uploadedUrl = res.data.url;
+        uploadedCid = res.data.cid;
       }
     }
 
-    return uploadedUrl;
+    return {
+      uploadedUrl,
+      uploadedCid,
+    };
   };
 
   // =========================
@@ -64,7 +82,6 @@ export default function UploadBox() {
     try {
       setStatus("Waiting for wallet...");
 
-      // ✅ REQUIRED CODE (as requested)
       const transaction = buildTransferTransaction(
         account.address,
         1
@@ -74,12 +91,21 @@ export default function UploadBox() {
 
       setStatus("Transaction confirmed. Uploading...");
 
-      // 📤 UPLOAD FILES
       const urls: string[] = [];
 
       for (const file of Array.from(files)) {
-        const url = await uploadFile(file);
-        if (url) urls.push(url);
+        const { uploadedUrl, uploadedCid } = await uploadFile(file);
+
+        if (uploadedCid) {
+          await mintStorageNFT(
+            signAndSubmitTransaction,
+            uploadedCid
+          );
+        }
+
+        if (uploadedUrl) {
+          urls.push(uploadedUrl);
+        }
       }
 
       setUploadedVideos(urls);
@@ -92,7 +118,6 @@ export default function UploadBox() {
 
   return (
     <div className="space-y-6">
-      {/* HEADER */}
       <div>
         <h2 className="text-2xl font-bold">Upload Files</h2>
         <p className="text-slate-400 mt-1">
@@ -100,7 +125,6 @@ export default function UploadBox() {
         </p>
       </div>
 
-      {/* FILE INPUT */}
       <div className="border-2 border-dashed border-slate-700 rounded-2xl p-10 text-center">
         <input
           type="file"
@@ -110,7 +134,6 @@ export default function UploadBox() {
         />
       </div>
 
-      {/* BUTTON */}
       <button
         onClick={handleUpload}
         className="bg-blue-600 hover:bg-blue-700 transition px-6 py-3 rounded-xl font-medium"
@@ -118,13 +141,15 @@ export default function UploadBox() {
         Upload Files
       </button>
 
-      {/* STATUS */}
       <p className="text-slate-300">{status}</p>
 
-      {/* VIDEO PREVIEW */}
       <div className="space-y-4">
         {uploadedVideos.map((video, index) => (
-          <video key={index} controls className="rounded-xl w-full">
+          <video
+            key={index}
+            controls
+            className="rounded-xl w-full"
+          >
             <source src={video} type="video/mp4" />
           </video>
         ))}
