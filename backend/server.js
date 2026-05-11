@@ -11,12 +11,8 @@ const connectDB = require("./config/db");
 // ROUTES
 const uploadRoute = require("./routes/upload");
 const aiRoute = require("./routes/ai");
-
-// ✅ SHARE ROUTE ADDED
-const shareRoute = require("./routes/share");
-
-// FILES ROUTE
 const filesRoute = require("./routes/files");
+const shareRoute = require("./routes/share");
 
 // SOCKET
 const { initSocket } = require("./socket");
@@ -27,10 +23,20 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+  })
+);
+
 app.use(express.json());
 
-// Static files
+// Root test route
+app.get("/", (req, res) => {
+  res.send("Shelby Backend Running");
+});
+
+// Static files (optional but useful for uploads)
 app.use(
   "/storage",
   express.static(path.join(__dirname, "storage"))
@@ -39,12 +45,8 @@ app.use(
 // Routes
 app.use("/upload", uploadRoute);
 app.use("/ai", aiRoute);
-
-// ✅ SHARE ROUTE MOUNTED
-app.use("/share", shareRoute);
-
-// FILES ROUTE
 app.use("/files", filesRoute);
+app.use("/share", shareRoute);
 
 // Create HTTP server
 const server = http.createServer(app);

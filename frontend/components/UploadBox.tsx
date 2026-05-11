@@ -18,7 +18,6 @@ export default function UploadBox() {
   const [status, setStatus] = useState("");
   const [uploadedVideos, setUploadedVideos] = useState<string[]>([]);
 
-  // WALLET HOOK
   const { account, signAndSubmitTransaction } = useWallet();
 
   // =========================
@@ -45,14 +44,15 @@ export default function UploadBox() {
       formData.append("totalChunks", totalChunks.toString());
       formData.append("fileName", file.name);
 
-      // ✅ FIXED WALLET CONVERSION
       formData.append(
         "wallet",
         account?.address?.toString() || ""
       );
 
+      const baseURL = process.env.NEXT_PUBLIC_API_URL;
+
       const res = await axios.post(
-        "https://shelby-storage-dashboard-1.onrender.com/upload/chunk",
+        `${baseURL}/upload/chunk`,
         formData
       );
 

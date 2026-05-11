@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
 
 export const socket = io(
-  "https://shelby-storage-dashboard-1.onrender.com"
+  process.env.NEXT_PUBLIC_API_URL!
 );

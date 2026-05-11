@@ -27,18 +27,15 @@ export default function FileGrid() {
       try {
         setLoading(true);
 
-        const baseURL =
-          "https://shelby-storage-dashboard-1.onrender.com/files";
+        // ✅ ENV BASE URL
+        const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
         const url = query
-          ? `${baseURL}/search/${account.address}?q=${query}`
-          : `${baseURL}/${account.address}`;
+          ? `${baseURL}/files/search/${account.address}?q=${query}`
+          : `${baseURL}/files/${account.address}`;
 
         const res = await axios.get(url);
 
-        // backend returns:
-        // - /:wallet -> { success, files }
-        // - /search -> { success, files }
         setFiles(res.data.files || []);
       } catch (err) {
         console.error("Error fetching files:", err);
