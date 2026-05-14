@@ -19,45 +19,64 @@ const { initSocket } = require("./socket");
 
 const app = express();
 
-// Connect to database
+// =========================
+// CONNECT DATABASE
+// =========================
 connectDB();
 
-// Middleware
+// =========================
+// MIDDLEWARE
+// =========================
 app.use(
   cors({
     origin: "*",
   })
 );
 
+// ✅ JSON BODY PARSER (ADDED)
 app.use(express.json());
 
-// Root test route
+// =========================
+// ROOT TEST ROUTE
+// =========================
 app.get("/", (req, res) => {
   res.send("Shelby Backend Running");
 });
 
-// Static files (optional but useful for uploads)
+// =========================
+// STATIC FILE SERVING (ADDED FIX)
+// =========================
 app.use(
   "/storage",
   express.static(path.join(__dirname, "storage"))
 );
 
-// Routes
+// =========================
+// ROUTES
+// =========================
 app.use("/upload", uploadRoute);
 app.use("/ai", aiRoute);
 app.use("/files", filesRoute);
 app.use("/share", shareRoute);
 
-// Create HTTP server
+// =========================
+// CREATE HTTP SERVER
+// =========================
 const server = http.createServer(app);
 
-// Initialize socket
+// =========================
+// SOCKET INIT
+// =========================
 initSocket(server);
 
-// Port setup
+// =========================
+// PORT
+// =========================
 const PORT = process.env.PORT || 5000;
 
-// Start server
+// =========================
+// START SERVER
+// =========================
 server.listen(PORT, () => {
   console.log(`Server running on ${PORT}`);
 });

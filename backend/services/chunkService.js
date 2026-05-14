@@ -1,69 +1,86 @@
-const fs = require("fs");
+const fs =
+  require("fs");
 
-const path = require("path");
+const path =
+  require("path");
 
-const chunksDir = path.join(
-  __dirname,
-  "../chunks"
-);
+const saveChunk =
+  async (
+    fileId,
+    chunkIndex,
+    buffer
+  ) => {
+    const dir =
+      path.join(
+        __dirname,
+        "../chunks",
+        fileId
+      );
 
-const storageDir = path.join(
-  __dirname,
-  "../storage"
-);
+    if (
+      !fs.existsSync(dir)
+    ) {
+      fs.mkdirSync(dir, {
+        recursive: true,
+      });
+    }
 
-if (!fs.existsSync(chunksDir)) {
-  fs.mkdirSync(chunksDir);
-}
-
-if (!fs.existsSync(storageDir)) {
-  fs.mkdirSync(storageDir);
-}
-
-const saveChunk = async (
-  fileId,
-  chunkIndex,
-  buffer
-) => {
-  const chunkPath = path.join(
-    chunksDir,
-    `${fileId}-${chunkIndex}`
-  );
-
-  fs.writeFileSync(chunkPath, buffer);
-};
-
-const mergeChunks = async (
-  fileId,
-  totalChunks,
-  finalFileName
-) => {
-  const finalPath = path.join(
-    storageDir,
-    finalFileName
-  );
-
-  const writeStream =
-    fs.createWriteStream(finalPath);
-
-  for (let i = 0; i < totalChunks; i++) {
-    const chunkPath = path.join(
-      chunksDir,
-      `${fileId}-${i}`
+    fs.writeFileSync(
+      path.join(
+        dir,
+        `${chunkIndex}`
+      ),
+      buffer
     );
+  };
 
-    const data =
-      fs.readFileSync(chunkPath);
+const mergeChunks =
+  async (
+    fileId,
+    totalChunks,
+    fileName
+  ) => {
+    const chunkDir =
+      path.join(
+        __dirname,
+        "../chunks",
+        fileId
+      );
 
-    writeStream.write(data);
+    const finalPath =
+      path.join(
+        __dirname,
+        "../storage",
+        fileName
+      );
 
-    fs.unlinkSync(chunkPath);
-  }
+    const writeStream =
+      fs.createWriteStream(
+        finalPath
+      );
 
-  writeStream.end();
+    for (
+      let i = 0;
+      i < totalChunks;
+      i++
+    ) {
+      const chunk =
+        fs.readFileSync(
+          path.join(
+            chunkDir,
+            `${i}`
+          )
+        );
 
-  return finalFileName;
-};
+      writeStream.write(
+        chunk
+      );
+    }
+
+    writeStream.end();
+
+    return finalPath;
+  };
 
 module.exports = {
   saveChunk,

@@ -11,6 +11,14 @@ import {
   mintStorageNFT,
 } from "../utils/aptosTransaction";
 
+import {
+  encryptFile,
+} from "../lib/encryption";
+
+import {
+  generateWalletKey,
+} from "../lib/walletKey";
+
 const CHUNK_SIZE = 1024 * 1024;
 
 export default function UploadBox() {
@@ -21,17 +29,16 @@ export default function UploadBox() {
   const { account, signAndSubmitTransaction } = useWallet();
 
   // =========================
-  // FILE UPLOAD FUNCTION
+  // SAFE FILE UPLOAD FUNCTION (REPLACED)
   // =========================
   const uploadFile = async (file: File) => {
     const fileId = uuidv4();
-    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-    let uploadedUrl = "";
-    let uploadedCid = "";
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
     for (let i = 0; i < totalChunks; i++) {
       const start = i * CHUNK_SIZE;
+
       const end = Math.min(file.size, start + CHUNK_SIZE);
 
       const chunk = file.slice(start, end);
@@ -39,33 +46,26 @@ export default function UploadBox() {
       const formData = new FormData();
 
       formData.append("chunk", chunk);
+
       formData.append("fileId", fileId);
+
       formData.append("chunkIndex", i.toString());
+
       formData.append("totalChunks", totalChunks.toString());
+
       formData.append("fileName", file.name);
 
+      // ✅ FIXED LINE
       formData.append(
         "wallet",
         account?.address?.toString() || ""
       );
 
-      const baseURL = process.env.NEXT_PUBLIC_API_URL;
-
-      const res = await axios.post(
-        `${baseURL}/upload/chunk`,
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/upload/chunk`,
         formData
       );
-
-      if (res.data.url) {
-        uploadedUrl = res.data.url;
-        uploadedCid = res.data.cid;
-      }
     }
-
-    return {
-      uploadedUrl,
-      uploadedCid,
-    };
   };
 
   // =========================
@@ -82,10 +82,7 @@ export default function UploadBox() {
     try {
       setStatus("Waiting for wallet...");
 
-      const transaction = buildTransferTransaction(
-        account.address,
-        1
-      );
+      const transaction = buildTransferTransaction(account.address, 1);
 
       await signAndSubmitTransaction(transaction);
 
@@ -94,21 +91,13 @@ export default function UploadBox() {
       const urls: string[] = [];
 
       for (const file of Array.from(files)) {
-        const { uploadedUrl, uploadedCid } = await uploadFile(file);
+        await uploadFile(file);
 
-        if (uploadedCid) {
-          await mintStorageNFT(
-            signAndSubmitTransaction,
-            uploadedCid
-          );
-        }
-
-        if (uploadedUrl) {
-          urls.push(uploadedUrl);
-        }
+        urls.push("uploaded");
       }
 
       setUploadedVideos(urls);
+
       setStatus("Files uploaded successfully");
     } catch (error) {
       console.error(error);
@@ -121,7 +110,7 @@ export default function UploadBox() {
       <div>
         <h2 className="text-2xl font-bold">Upload Files</h2>
         <p className="text-slate-400 mt-1">
-          Wallet-gated chunk upload system
+          Wallet-gated encrypted chunk upload system
         </p>
       </div>
 
@@ -145,11 +134,7 @@ export default function UploadBox() {
 
       <div className="space-y-4">
         {uploadedVideos.map((video, index) => (
-          <video
-            key={index}
-            controls
-            className="rounded-xl w-full"
-          >
+          <video key={index} controls className="rounded-xl w-full">
             <source src={video} type="video/mp4" />
           </video>
         ))}

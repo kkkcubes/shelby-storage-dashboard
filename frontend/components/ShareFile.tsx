@@ -1,42 +1,90 @@
 "use client";
 
 import axios from "axios";
-import { useState } from "react";
 
-export default function ShareFile() {
-  const [cid, setCid] = useState("");
+import {
+  useWallet,
+} from "@aptos-labs/wallet-adapter-react";
 
-  const [wallet, setWallet] = useState("");
+import {
+  generateWalletKey,
+} from "../lib/walletKey";
 
-  const share = async () => {
-    await axios.post(
-      "http://localhost:5000/share",
-      {
-        cid,
-        wallet,
+import {
+  encryptShareKey,
+} from "../lib/shareEncryption";
+
+export default function ShareFile({
+  cid,
+}: any) {
+  const { account } =
+    useWallet();
+
+  const share =
+    async () => {
+      try {
+        const recipient =
+          prompt(
+            "Recipient Wallet"
+          );
+
+        if (!recipient)
+          return;
+
+        // =========================
+        // GENERATE OWNER KEY
+        // =========================
+        const walletKey =
+          generateWalletKey(
+            account?.address?.toString() ||
+              ""
+          );
+
+        // =========================
+        // ENCRYPT SHARE KEY
+        // =========================
+        const encryptedKey =
+          encryptShareKey(
+            walletKey,
+            recipient
+          );
+
+        // =========================
+        // SAVE SHARE RECORD
+        // =========================
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/share`,
+          {
+            owner:
+              account?.address?.toString(),
+
+            sharedWith:
+              recipient,
+
+            cid,
+
+            encryptedKey,
+          }
+        );
+
+        alert(
+          "Shared securely"
+        );
+      } catch (error) {
+        console.error(error);
+
+        alert(
+          "Share failed"
+        );
       }
-    );
-  };
+    };
 
   return (
-    <div className="space-y-4">
-      <input
-        placeholder="CID"
-        onChange={(e) =>
-          setCid(e.target.value)
-        }
-      />
-
-      <input
-        placeholder="Wallet Address"
-        onChange={(e) =>
-          setWallet(e.target.value)
-        }
-      />
-
-      <button onClick={share}>
-        Share File
-      </button>
-    </div>
+    <button
+      onClick={share}
+      className="bg-purple-600 hover:bg-purple-700 transition px-3 py-2 rounded-lg text-white"
+    >
+      Share
+    </button>
   );
 }

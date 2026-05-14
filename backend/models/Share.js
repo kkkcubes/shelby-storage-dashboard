@@ -9,6 +9,8 @@ const ShareSchema =
 
     cid: String,
 
+    encryptedKey: String,
+
     createdAt: {
       type: Date,
       default: Date.now,
